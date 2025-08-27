@@ -14,9 +14,9 @@ import com.minecolonies.api.eventbus.events.colony.citizens.CitizenAddedModEvent
 import com.minecolonies.api.eventbus.events.colony.citizens.CitizenDiedModEvent;
 import com.minecolonies.api.eventbus.events.colony.citizens.CitizenJobChangedModEvent;
 import de.bluecolored.bluemap.api.BlueMapAPI;
-import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.jetbrains.annotations.NotNull;
 
 @Mod(Constants.MOD_ID)
@@ -24,7 +24,7 @@ public class MinecoloniesBluemap
 {
     private final BluemapIntegration integration;
 
-    public MinecoloniesBluemap(final IEventBus modBus)
+    public MinecoloniesBluemap(FMLJavaModLoadingContext context)
     {
         Log.getLogger().info("Loading MinecoloniesBluemap...");
         this.integration = new BluemapIntegration();
@@ -32,7 +32,7 @@ public class MinecoloniesBluemap
         BlueMapAPI.onEnable(this.integration::onEnable);
         BlueMapAPI.onDisable(this.integration::onDisable);
 
-        modBus.addListener(this::preInit);
+        context.getModEventBus().addListener(this::preInit);
     }
 
     /**

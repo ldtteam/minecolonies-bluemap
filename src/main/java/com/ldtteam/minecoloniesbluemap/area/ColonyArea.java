@@ -51,7 +51,7 @@ public class ColonyArea
         // from the deque for simplification.
         if ((last != null && secondLast != null) && ((last.getX() == x && secondLast.getX() == x) || (last.getY() == z && secondLast.getY() == z)))
         {
-            this.points.removeLast();
+            this.points.remove(this.points.size() - 1);
         }
 
         this.points.add(newPoint);
@@ -155,6 +155,6 @@ public class ColonyArea
      */
     public void close()
     {
-        this.points.add(new Vector2d(this.points.getFirst().getX(), this.points.getFirst().getY()));
+        this.points.add(new Vector2d(this.points.get(0).getX(), this.points.get(0).getY()));
     }
 }

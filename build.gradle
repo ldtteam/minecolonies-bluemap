@@ -2,7 +2,6 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '6.+'
-    id 'org.parchmentmc.librarian.forgegradle' version '1.+'
 }
 
 version = mod_version
@@ -52,8 +51,9 @@ dependencies {
         transitive = false
     }
 
-    compileOnly(fg.deobf("de.bluecolored:bluemap-api:${project.bluemap_api_version}"))
-    runtimeOnly "curse.maven:bluemap-406463:${project.bluemap_curse_file_version}"
+    compileOnly(fg.deobf("de.bluecolored.bluemap:BlueMapAPI:${project.bluemap_api_version}"))
+    compileOnly(fg.deobf('com.flowpowered:flow-math:1.0.3'))
+    runtimeOnly(fg.deobf("curse.maven:bluemap-406463:${project.bluemap_curse_file_version}"))
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -72,11 +72,12 @@ tasks.withType(ProcessResources).configureEach {
                              mod_version                      : mod_version,
                              mod_authors                      : mod_authors,
                              mod_description                  : mod_description,
+                             mod_issue_tracker_url            : mod_issue_tracker_url,
                              dependencies_minecolonies_version: minecolonies_version,
                              dependencies_bluemap_version     : bluemap_version]
     inputs.properties replaceProperties
 
-    filesMatching(['META-INF/mods.toml']) {
+    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
         expand replaceProperties
     }
 }
