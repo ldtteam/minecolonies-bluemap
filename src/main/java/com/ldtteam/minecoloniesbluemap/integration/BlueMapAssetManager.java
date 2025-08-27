@@ -41,9 +41,12 @@ public class BlueMapAssetManager
         {
             Log.getLogger().info("[Bluemap] Clearing old files");
             final Path rootPath = api.getWebApp().getWebRoot().resolve(Path.of("assets", com.minecolonies.api.util.constant.Constants.MOD_ID));
-            try (Stream<Path> walk = Files.walk(rootPath))
+            if (Files.exists(rootPath))
             {
-                walk.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+                try (Stream<Path> walk = Files.walk(rootPath))
+                {
+                    walk.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+                }
             }
             Files.createDirectories(rootPath);
 
