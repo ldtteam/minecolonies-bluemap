@@ -92,7 +92,7 @@
 }
 
 .minecolonies-marker table tbody {
-    display: block;
+    display: inline-block;
     max-height: 15em;
     overflow-y: auto;
 }

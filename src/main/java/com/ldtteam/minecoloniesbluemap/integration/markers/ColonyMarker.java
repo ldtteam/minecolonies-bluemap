@@ -22,6 +22,9 @@ import net.minecraft.world.level.ChunkPos;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Reusable methods for determining colony marker info.
+ */
 public class ColonyMarker
 {
     /**
@@ -34,55 +37,74 @@ public class ColonyMarker
     private static final ResourceLocation TEMPLATE_MARKER_COLONY_CITIZEN_UNEMPLOYED_ROW =
         ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "markers/citizen_unemployed_row.html");
 
+    /**
+     * Alpha color for the line color.
+     */
     private static final float COLONY_MARKER_LINE_COLOR_ALPHA = 1F;
+
+    /**
+     * Alpha color for the fill color.
+     */
     private static final float COLONY_MARKER_FILL_COLOR_ALPHA = 0.3F;
 
     private ColonyMarker() {}
 
+    /**
+     * Creates the HTML details string for the colony marker.
+     *
+     * @param colony the target colony.
+     * @return the HTML string.
+     */
     public static String createDetails(final IColony colony)
     {
-        final Map<String, String> markerContext = new HashMap<>();
-        markerContext.put("icon", getColonyIcon(colony));
-        markerContext.put("colony", colony.getName());
-        markerContext.put("mayor", colony.getPermissions().getOwnerName());
-        markerContext.put("style", colony.getStructurePack());
-        markerContext.put("building_count", String.valueOf(colony.getBuildingManager().getBuildings().size()));
-        markerContext.put("citizen_count", String.valueOf(colony.getCitizenManager().getCitizens().size()));
-
         final Map<BuildingEntry, Long> buildingsData =
             colony.getBuildingManager().getBuildings().values().stream().collect(Collectors.groupingBy(IBuilding::getBuildingType, Collectors.counting()));
 
-        final List<String> buildingInfo = new ArrayList<>();
+        final List<HtmlParser.HttpContent> buildingInfo = new ArrayList<>();
         for (final Map.Entry<BuildingEntry, Long> building : buildingsData.entrySet())
         {
-            final Map<String, String> buildingMarkerContext = new HashMap<>();
-            buildingMarkerContext.put("building_type", I18n.get(building.getKey().getTranslationKey()));
-            buildingMarkerContext.put("count", String.valueOf(building.getValue()));
-            buildingInfo.add(HtmlParser.parseHtmlFile(TEMPLATE_MARKER_COLONY_BUILDING_ROW, buildingMarkerContext));
+            final HtmlParser.HttpParsingContext buildingMarkerContext = HtmlParser.HttpParsingContext.builder()
+                .withVariable("building_type", I18n.get(building.getKey().getTranslationKey()))
+                .withVariable("count", String.valueOf(building.getValue()));
+            buildingInfo.add(HtmlParser.parseHtml(TEMPLATE_MARKER_COLONY_BUILDING_ROW, buildingMarkerContext));
         }
-        markerContext.put("building_info", String.join("", buildingInfo));
 
-        final List<String> citizenInfo = new ArrayList<>();
+        final List<HtmlParser.HttpContent> citizenInfo = new ArrayList<>();
         for (final ICitizenData citizen : colony.getCitizenManager().getCitizens())
         {
-            final Map<String, String> citizenMarkerContext = new HashMap<>();
-            citizenMarkerContext.put("name", citizen.getName());
+            final HtmlParser.HttpParsingContext citizenMarkerContext = HtmlParser.HttpParsingContext.builder().withVariable("name", citizen.getName());
+
             final Optional<String> jobText = Optional.ofNullable(citizen.getJob()).map(IJob::getJobRegistryEntry).map(JobEntry::getTranslationKey).map(I18n::get);
             if (jobText.isPresent())
             {
-                citizenMarkerContext.put("job", jobText.get());
-                citizenInfo.add(HtmlParser.parseHtmlFile(TEMPLATE_MARKER_COLONY_CITIZEN_EMPLOYED_ROW, citizenMarkerContext));
+                citizenMarkerContext.withVariable("job", jobText.get());
+                citizenInfo.add(HtmlParser.parseHtml(TEMPLATE_MARKER_COLONY_CITIZEN_EMPLOYED_ROW, citizenMarkerContext));
             }
             else
             {
-                citizenInfo.add(HtmlParser.parseHtmlFile(TEMPLATE_MARKER_COLONY_CITIZEN_UNEMPLOYED_ROW, citizenMarkerContext));
+                citizenInfo.add(HtmlParser.parseHtml(TEMPLATE_MARKER_COLONY_CITIZEN_UNEMPLOYED_ROW, citizenMarkerContext));
             }
         }
-        markerContext.put("citizen_info", String.join("", citizenInfo));
 
-        return HtmlParser.parseHtmlFile(TEMPLATE_MARKER_COLONY, markerContext);
+        final HtmlParser.HttpParsingContext markerContext = HtmlParser.HttpParsingContext.builder()
+            .withVariable("icon", getColonyIcon(colony))
+            .withVariable("colony", colony.getName())
+            .withVariable("mayor", colony.getPermissions().getOwnerName())
+            .withVariable("style", colony.getStructurePack())
+            .withVariable("building_count", String.valueOf(colony.getBuildingManager().getBuildings().size()))
+            .withVariable("citizen_count", String.valueOf(colony.getCitizenManager().getCitizens().size()))
+            .withChildren("building_info", buildingInfo)
+            .withChildren("citizen_info", citizenInfo);
+
+        return HtmlParser.parseHtml(TEMPLATE_MARKER_COLONY, markerContext).build();
     }
 
+    /**
+     * Internal method for getting the correct icon name for the CSS class for the marker.
+     *
+     * @param colony the target colony.
+     * @return the identifier for the correct CSS class.
+     */
     private static String getColonyIcon(final IColony colony)
     {
         int currentCitizens = colony.getCitizenManager().getCitizens().size();
@@ -103,6 +125,12 @@ public class ColonyMarker
         return icon;
     }
 
+    /**
+     * Creates the shape for the colony marker.
+     *
+     * @param colony the target colony.
+     * @return the shape instance.
+     */
     public static Shape createShape(final IColony colony)
     {
         final Collection<ChunkPos> claimedChunks = ColonyChunkClaimCalculator.getAllClaimedChunks(colony);
@@ -110,12 +138,24 @@ public class ColonyMarker
         return Shape.builder().addPoints(area.getPoints()).build();
     }
 
+    /**
+     * Creates the line color for the colony marker.
+     *
+     * @param colony the target colony.
+     * @return the color instance.
+     */
     public static Color getLineColor(final IColony colony)
     {
         final Color baseColor = new Color(Optional.ofNullable(colony.getTeamColonyColor()).map(ChatFormatting::getColor).orElse(0));
         return new Color(baseColor.getRed(), baseColor.getGreen(), baseColor.getBlue(), COLONY_MARKER_LINE_COLOR_ALPHA);
     }
 
+    /**
+     * Creates the fill color for the colony marker.
+     *
+     * @param colony the target colony.
+     * @return the color instance.
+     */
     public static Color getFillColor(final IColony colony)
     {
         final Color baseColor = new Color(Optional.ofNullable(colony.getTeamColonyColor()).map(ChatFormatting::getColor).orElse(0));
