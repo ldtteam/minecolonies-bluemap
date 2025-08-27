@@ -1,0 +1,138 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.gradle.userdev' version '7.0.+'
+}
+
+tasks.named('wrapper', Wrapper).configure {
+    distributionType = Wrapper.DistributionType.BIN
+}
+
+version = mod_version
+group = mod_group_id
+
+repositories {
+    maven {
+        name 'LDTTeam - Modding'
+        url 'https://ldtteam.jfrog.io/ldtteam/modding/'
+    }
+    maven {
+        name 'BlueMap - Releases'
+        url 'https://repo.bluecolored.de/releases'
+    }
+    maven {
+        name 'CurseMaven'
+        url 'https://cursemaven.com'
+    }
+}
+
+base {
+    archivesName = mod_id
+}
+
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+configurations {
+    runtimeClasspath.extendsFrom localRuntime
+}
+
+dependencies {
+    implementation "net.neoforged:neoforge:${neo_version}"
+
+    implementation("com.ldtteam:minecolonies:${project.minecolonies_version}") {
+        transitive = false
+    }
+
+    implementation("com.ldtteam:structurize:${project.structurize_version}") {
+        transitive = false
+    }
+
+    implementation("com.ldtteam:blockui:${project.blockui_version}") {
+        transitive = false
+    }
+
+    implementation("com.ldtteam:domum-ornamentum:${project.domum_ornamentum_version}") {
+        transitive = false
+    }
+
+    compileOnly "de.bluecolored:bluemap-api:${project.bluemap_api_version}"
+    compileOnly "de.bluecolored:bluemap-core:${project.bluemap_version}"
+    runtimeOnly "curse.maven:bluemap-406463:${project.bluemap_curse_file_version}"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(ProcessResources).configureEach {
+    var replaceProperties = [minecraft_version                : minecraft_version,
+                             minecraft_version_range          : minecraft_version_range,
+                             neo_version                      : neo_version,
+                             loader_version_range             : loader_version_range,
+                             mod_id                           : mod_id,
+                             mod_name                         : mod_name,
+                             mod_license                      : mod_license,
+                             mod_version                      : mod_version,
+                             mod_authors                      : mod_authors,
+                             mod_description                  : mod_description,
+                             mod_issue_tracker_url            : mod_issue_tracker_url,
+                             dependencies_minecolonies_version: minecolonies_version,
+                             dependencies_bluemap_version     : bluemap_version]
+    inputs.properties replaceProperties
+
+    filesMatching(['META-INF/neoforge.mods.toml']) {
+        expand replaceProperties
+    }
+}
+
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            url "file://${project.projectDir}/repo"
+        }
+    }
+}
+
+def copyLibsToRuns = tasks.register('copyLibsToRuns', Copy) {
+    from configurations.runtimeClasspath
+    into "$rootDir/runs/client/mods"
+    include '*minecolonies*'
+}
+
+tasks.named('runs') {
+    finalizedBy copyLibsToRuns
+}
+
+runs {
+    configureEach {
+        systemProperty 'forge.logging.markers', 'REGISTRIES'
+        systemProperty 'forge.logging.console.level', 'debug'
+
+        modSource project.sourceSets.main
+    }
+
+    client {
+        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+    }
+
+    server {
+        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        argument '--nogui'
+    }
+
+    gameTestServer {
+        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+    }
+}

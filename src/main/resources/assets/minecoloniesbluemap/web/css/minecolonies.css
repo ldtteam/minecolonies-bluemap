@@ -1,0 +1,98 @@
+.bm-marker-labelpopup:has(.minecolonies-marker) {
+    pointer-events: auto !important;
+    user-select: auto !important;
+    max-width: fit-content !important;
+}
+
+.minecolonies-marker * {
+    white-space: nowrap;
+}
+
+.minecolonies-marker .minecolonies-icon {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    font-size: 1.2em;
+}
+
+.minecolonies-marker .minecolonies-icon::before {
+    margin: 0 0.25em 0 0;
+    line-height: 0;
+}
+
+.minecolonies-marker .minecolonies-icon.minecolonies-icon-city::before {
+    content: url('/assets/minecolonies/textures/colony_city.png');
+}
+
+.minecolonies-marker .minecolonies-icon.minecolonies-icon-village::before {
+    content: url('/assets/minecolonies/textures/colony_village.png');
+}
+
+.minecolonies-marker .minecolonies-icon.minecolonies-icon-hamlet::before {
+    content: url('/assets/minecolonies/textures/colony_hamlet.png');
+}
+
+.minecolonies-marker .minecolonies-icon.minecolonies-icon-outpost::before {
+    content: url('/assets/minecolonies/textures/colony_outpost.png');
+}
+
+.minecolonies-marker div.paragraph > p {
+    margin: 0;
+}
+
+.minecolonies-marker div.paragraph > p:first-child {
+    margin-top: 1em;
+}
+
+.minecolonies-marker div.paragraph > p:last-child {
+    margin-bottom: 1em;
+}
+
+.minecolonies-marker details {
+    width: 100%;
+    overflow: hidden;
+    margin: 0.5em 0;
+}
+
+.minecolonies-marker summary {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    list-style: none;
+    outline: none;
+    border: 0;
+    border-radius: 5px;
+    padding-bottom: 0.5em;
+}
+
+.minecolonies-marker summary::after {
+    content: '';
+    width: 1em;
+    aspect-ratio: 1;
+    background: url('/assets/minecolonies/textures/arrow.svg') no-repeat;
+    background-size: cover;
+    transition: 0.2s;
+}
+
+.minecolonies-marker details[open] summary:after {
+    transform: rotate(180deg);
+}
+
+.minecolonies-marker .content {
+    line-height: 1.6;
+    padding: 0 0.5em;
+}
+
+.minecolonies-marker table {
+    border: none;
+    border-collapse: separate;
+    border-spacing: 0.25em 0;
+    width: 100%;
+}
+
+.minecolonies-marker table tbody {
+    display: block;
+    max-height: 15em;
+    overflow-y: auto;
+}

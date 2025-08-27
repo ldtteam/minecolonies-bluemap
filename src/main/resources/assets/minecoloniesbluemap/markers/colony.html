@@ -1,0 +1,37 @@
+<div class="minecolonies-marker">
+    <p class="minecolonies-icon minecolonies-icon-{{icon}}">{{colony}}</p>
+    <div class="paragraph">
+        <p>Mayor: {{mayor}}</p>
+        <p>Style: {{style}}</p>
+    </div>
+
+    <hr/>
+
+    <details class="expansion">
+        <summary>
+            <span>Buildings: {{building_count}}<i></i></span>
+        </summary>
+        <div class="content">
+            <table>
+                <tbody>
+                {{building_info}}
+                </tbody>
+            </table>
+        </div>
+    </details>
+
+    <hr/>
+
+    <details class="expansion">
+        <summary>
+            <span>Population: {{citizen_count}}<i></i></span>
+        </summary>
+        <div class="content">
+            <table>
+                <tbody>
+                {{citizen_info}}
+                </tbody>
+            </table>
+        </div>
+    </details>
+</div>
