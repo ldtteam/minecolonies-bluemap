@@ -113,13 +113,15 @@ publishing {
 
 def copyLibsToRuns = tasks.register('copyLibsToRuns', Copy) {
     from configurations.runtimeClasspath
-    into "$rootDir/runs/client/mods"
+    into "$rootDir/run/mods"
     include '*minecolonies*'
 }
 
-//tasks.named('prepareRuns') {
-//    finalizedBy copyLibsToRuns
-//}
+afterEvaluate {
+    tasks.named('prepareRuns') {
+        finalizedBy copyLibsToRuns
+    }
+}
 
 minecraft {
     mappings channel: mapping_channel, version: mapping_version
