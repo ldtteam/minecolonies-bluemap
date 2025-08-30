@@ -46,19 +46,19 @@ authors="${mod_authors}" #optional
     mandatory=true
     versionRange="${forge_version_range}"
     ordering="NONE"
-    side="BOTH"
+    side="SERVER"
 [[dependencies.${mod_id}]]
     modId="minecraft"
     mandatory=true
     versionRange="${minecraft_version_range}"
     ordering="NONE"
-    side="BOTH"
+    side="SERVER"
 [[dependencies.${mod_id}]]
     modId="minecolonies"
     mandatory=true
     versionRange="[${dependencies_minecolonies_version}, )"
     ordering="AFTER"
-    side="BOTH"
+    side="SERVER"
 [[dependencies.${mod_id}]]
     modId="bluemap"
     mandatory=true

@@ -1,13 +1,12 @@
 package com.ldtteam.minecoloniesbluemap.util;
 
 import com.google.common.html.HtmlEscapers;
-import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.Resource;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -42,12 +41,12 @@ public class HtmlParser
      */
     public static HttpContent parseHtml(@NotNull final ResourceLocation file, @NotNull final HttpParsingContext context)
     {
-        final Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(file);
+        final Optional<InputStream> resource = FileLoader.openFile(file);
         if (resource.isPresent())
         {
             try
             {
-                final String htmlString = IOUtils.toString(resource.get().open(), Charset.defaultCharset());
+                final String htmlString = IOUtils.toString(resource.get(), Charset.defaultCharset());
                 return parseHtml(htmlString, context);
             }
             catch (IOException ex)

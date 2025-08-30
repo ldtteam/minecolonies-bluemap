@@ -15,7 +15,8 @@ import com.minecolonies.api.util.constant.CitizenConstants;
 import de.bluecolored.bluemap.api.math.Color;
 import de.bluecolored.bluemap.api.math.Shape;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.resources.language.I18n;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.ChunkPos;
 
@@ -64,7 +65,7 @@ public class ColonyMarker
         for (final Map.Entry<BuildingEntry, Long> building : buildingsData.entrySet())
         {
             final HtmlParser.HttpParsingContext buildingMarkerContext = HtmlParser.HttpParsingContext.builder()
-                .withVariable("building_type", I18n.get(building.getKey().getTranslationKey()))
+                .withVariable("building_type", Component.translatable(building.getKey().getTranslationKey()).getString())
                 .withVariable("count", String.valueOf(building.getValue()));
             buildingInfo.add(HtmlParser.parseHtml(TEMPLATE_MARKER_COLONY_BUILDING_ROW, buildingMarkerContext));
         }
@@ -74,7 +75,8 @@ public class ColonyMarker
         {
             final HtmlParser.HttpParsingContext citizenMarkerContext = HtmlParser.HttpParsingContext.builder().withVariable("name", citizen.getName());
 
-            final Optional<String> jobText = Optional.ofNullable(citizen.getJob()).map(IJob::getJobRegistryEntry).map(JobEntry::getTranslationKey).map(I18n::get);
+            final Optional<String> jobText =
+                Optional.ofNullable(citizen.getJob()).map(IJob::getJobRegistryEntry).map(JobEntry::getTranslationKey).map(Component::translatable).map(MutableComponent::getString);
             if (jobText.isPresent())
             {
                 citizenMarkerContext.withVariable("job", jobText.get());
