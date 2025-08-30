@@ -1,7 +1,6 @@
 package com.ldtteam.minecoloniesbluemap;
 
 import com.ldtteam.minecoloniesbluemap.integration.BluemapIntegration;
-import com.ldtteam.minecoloniesbluemap.util.Log;
 import com.minecolonies.api.IMinecoloniesAPI;
 import com.minecolonies.api.eventbus.events.colony.ColonyCreatedModEvent;
 import com.minecolonies.api.eventbus.events.colony.ColonyDeletedModEvent;
@@ -26,7 +25,6 @@ public class MinecoloniesBluemap
 
     public MinecoloniesBluemap(final IEventBus modBus)
     {
-        Log.getLogger().info("Loading MinecoloniesBluemap...");
         this.integration = new BluemapIntegration();
 
         BlueMapAPI.onEnable(this.integration::onEnable);

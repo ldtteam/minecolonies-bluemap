@@ -1,11 +1,8 @@
 package com.ldtteam.minecoloniesbluemap.integration;
 
-import com.ldtteam.minecoloniesbluemap.Constants;
+import com.ldtteam.minecoloniesbluemap.util.FileLoader;
 import com.ldtteam.minecoloniesbluemap.util.Log;
 import de.bluecolored.bluemap.api.BlueMapAPI;
-import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.Resource;
 import org.apache.commons.io.IOUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,13 +22,13 @@ public class BlueMapAssetManager
     /**
      * Asset identifiers.
      */
-    private static final ResourceLocation CSS_MINECOLONIES       = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "css/minecolonies.css");
-    private static final ResourceLocation SCRIPTS_MINECOLONIES   = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "scripts/minecolonies.js");
-    private static final ResourceLocation TEXTURE_ARROW          = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/arrow.svg");
-    private static final ResourceLocation TEXTURE_COLONY_CITY    = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/colony_city.png");
-    private static final ResourceLocation TEXTURE_COLONY_VILLAGE = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/colony_village.png");
-    private static final ResourceLocation TEXTURE_COLONY_HAMLET  = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/colony_hamlet.png");
-    private static final ResourceLocation TEXTURE_COLONY_OUTPOST = ResourceLocation.fromNamespaceAndPath(Constants.MOD_ID, "textures/colony_outpost.png");
+    private static final String CSS_MINECOLONIES       = "css/minecolonies.css";
+    private static final String SCRIPTS_MINECOLONIES   = "scripts/minecolonies.js";
+    private static final String TEXTURE_ARROW          = "textures/arrow.svg";
+    private static final String TEXTURE_COLONY_CITY    = "textures/colony_city.png";
+    private static final String TEXTURE_COLONY_VILLAGE = "textures/colony_village.png";
+    private static final String TEXTURE_COLONY_HAMLET  = "textures/colony_hamlet.png";
+    private static final String TEXTURE_COLONY_OUTPOST = "textures/colony_outpost.png";
 
     private BlueMapAssetManager() {}
 
@@ -60,8 +57,8 @@ public class BlueMapAssetManager
             copyFile(TEXTURE_COLONY_OUTPOST, rootPath);
 
             Log.getLogger().info("[Bluemap] Registering styles and scripts");
-            api.getWebApp().registerStyle(CSS_MINECOLONIES.withPrefix("assets/" + com.minecolonies.api.util.constant.Constants.MOD_ID + "/").getPath());
-            api.getWebApp().registerScript(SCRIPTS_MINECOLONIES.withPrefix("assets/" + com.minecolonies.api.util.constant.Constants.MOD_ID + "/").getPath());
+            api.getWebApp().registerStyle(String.format("assets/%s/%s", com.minecolonies.api.util.constant.Constants.MOD_ID, CSS_MINECOLONIES));
+            api.getWebApp().registerScript(String.format("assets/%s/%s", com.minecolonies.api.util.constant.Constants.MOD_ID, SCRIPTS_MINECOLONIES));
         }
         catch (final IOException e)
         {
@@ -69,14 +66,14 @@ public class BlueMapAssetManager
         }
     }
 
-    private static void copyFile(final ResourceLocation id, final Path targetDirectory) throws IOException
+    private static void copyFile(final String filePath, final Path targetDirectory) throws IOException
     {
-        final Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(id.withPrefix("web/"));
+        final Optional<InputStream> resource = FileLoader.openFile(String.format("web/%s", filePath));
         if (resource.isPresent())
         {
-            final Path subPath = targetDirectory.resolve(id.getPath());
+            final Path subPath = targetDirectory.resolve(filePath);
             Files.createDirectories(subPath.getParent());
-            try (final InputStream input = resource.get().open();
+            try (final InputStream input = resource.get();
                  final OutputStream output = Files.newOutputStream(subPath, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE))
             {
                 IOUtils.copy(input, output);

@@ -59,16 +59,29 @@ public class BluemapIntegration
         this.api = api;
         BlueMapAssetManager.createAssets(api);
 
+        ensureMarkerSetsExist();
+
+        IMinecoloniesAPI.getInstance().getColonyManager().getAllColonies().forEach(colony -> {
+            createColonyMarker(colony);
+        });
+    }
+
+    /**
+     * Ensures the creation of all marker sets.
+     */
+    private void ensureMarkerSetsExist()
+    {
+        if (api == null)
+        {
+            return;
+        }
+
         api.getMaps().forEach(bMap -> {
             bMap.getMarkerSets().computeIfAbsent(COLONIES_MARKER_SET.toString(), k -> MarkerSet.builder().label(COLONIES_MARKER_SET_NAME).toggleable(true).build());
             bMap.getMarkerSets()
                 .computeIfAbsent(BUILDINGS_MARKER_SET.toString(), k -> MarkerSet.builder().label(BUILDINGS_MARKER_SET_NAME).toggleable(true).defaultHidden(true).build());
             bMap.getMarkerSets()
                 .computeIfAbsent(CITIZENS_MARKER_SET.toString(), k -> MarkerSet.builder().label(CITIZENS_MARKER_SET_NAME).toggleable(true).defaultHidden(true).build());
-        });
-
-        IMinecoloniesAPI.getInstance().getColonyManager().getAllColonies().forEach(colony -> {
-            createColonyMarker(colony);
         });
     }
 
@@ -103,6 +116,8 @@ public class BluemapIntegration
         {
             return;
         }
+
+        ensureMarkerSetsExist();
 
         api.getWorld(colony.getWorld()).ifPresent(bWorld -> bWorld.getMaps().forEach(action));
     }

@@ -52,22 +52,22 @@ description='''${mod_description}'''
     type="required" #mandatory
     versionRange="[${neo_version},)" #mandatory
     ordering="NONE"
-    side="BOTH"
+    side="SERVER"
 [[dependencies.${mod_id}]]
     modId="minecraft"
     type="required"
     versionRange="${minecraft_version_range}"
     ordering="NONE"
-    side="BOTH"
+    side="SERVER"
 [[dependencies.${mod_id}]]
     modId="minecolonies"
     type="required"
     versionRange="[${dependencies_minecolonies_version}, )"
     ordering="AFTER"
-    side="BOTH"
+    side="SERVER"
 [[dependencies.${mod_id}]]
     modId="bluemap"
     type="required"
     versionRange="[${dependencies_bluemap_version}, )"
     ordering="BEFORE"
-    side="BOTH"
+    side="SERVER"
