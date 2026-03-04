@@ -32,7 +32,7 @@ public class ColonyChunkClaimCalculator
         getProtectionArea(colony, claimedChunks);
 
         // Claim all the buildings
-        colony.getBuildingManager().getBuildings().values().forEach(f -> claimBuilding(f, claimedChunks));
+        colony.getServerBuildingManager().getBuildings().values().forEach(f -> claimBuilding(f, claimedChunks));
 
         return claimedChunks;
     }

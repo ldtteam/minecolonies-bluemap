@@ -59,7 +59,7 @@ public class ColonyMarker
     public static String createDetails(final IColony colony)
     {
         final Map<BuildingEntry, Long> buildingsData =
-            colony.getBuildingManager().getBuildings().values().stream().collect(Collectors.groupingBy(IBuilding::getBuildingType, Collectors.counting()));
+            colony.getServerBuildingManager().getBuildings().values().stream().collect(Collectors.groupingBy(IBuilding::getBuildingType, Collectors.counting()));
 
         final List<HtmlParser.HttpContent> buildingInfo = new ArrayList<>();
         for (final Map.Entry<BuildingEntry, Long> building : buildingsData.entrySet())
@@ -93,7 +93,7 @@ public class ColonyMarker
             .withVariable("colony", colony.getName())
             .withVariable("mayor", colony.getPermissions().getOwnerName())
             .withVariable("style", colony.getStructurePack())
-            .withVariable("building_count", String.valueOf(colony.getBuildingManager().getBuildings().size()))
+            .withVariable("building_count", String.valueOf(colony.getServerBuildingManager().getBuildings().size()))
             .withVariable("citizen_count", String.valueOf(colony.getCitizenManager().getCitizens().size()))
             .withChildren("building_info", buildingInfo)
             .withChildren("citizen_info", citizenInfo);
