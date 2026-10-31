@@ -61,9 +61,7 @@ public class BluemapIntegration
 
         ensureMarkerSetsExist();
 
-        IMinecoloniesAPI.getInstance().getColonyManager().getAllColonies().forEach(colony -> {
-            createColonyMarker(colony);
-        });
+        IMinecoloniesAPI.getInstance().getColonyManager().getAllColonies().forEach(this::createColonyMarker);
     }
 
     /**
@@ -195,6 +193,7 @@ public class BluemapIntegration
         executeForEachMap(event.getColony(), bMap -> {
             final ExtrudeMarker marker = (ExtrudeMarker) bMap.getMarkerSets().get(COLONIES_MARKER_SET.toString()).get(String.valueOf(event.getColony().getID()));
             marker.setDetail(ColonyMarker.createDetails(event.getColony()));
+            marker.setShape(ColonyMarker.createShape(event.getColony()), event.getColony().getCenter().getY() - ChunkPos.REGION_SIZE * 2F, event.getColony().getCenter().getY() + ChunkPos.REGION_SIZE * 2F);
         });
     }
 
@@ -208,6 +207,7 @@ public class BluemapIntegration
         executeForEachMap(event.getColony(), bMap -> {
             final ExtrudeMarker marker = (ExtrudeMarker) bMap.getMarkerSets().get(COLONIES_MARKER_SET.toString()).get(String.valueOf(event.getColony().getID()));
             marker.setDetail(ColonyMarker.createDetails(event.getColony()));
+            marker.setShape(ColonyMarker.createShape(event.getColony()), event.getColony().getCenter().getY() - ChunkPos.REGION_SIZE * 2F, event.getColony().getCenter().getY() + ChunkPos.REGION_SIZE * 2F);
         });
     }
 
@@ -221,6 +221,7 @@ public class BluemapIntegration
         executeForEachMap(event.getColony(), bMap -> {
             final ExtrudeMarker marker = (ExtrudeMarker) bMap.getMarkerSets().get(COLONIES_MARKER_SET.toString()).get(String.valueOf(event.getColony().getID()));
             marker.setDetail(ColonyMarker.createDetails(event.getColony()));
+            marker.setShape(ColonyMarker.createShape(event.getColony()), event.getColony().getCenter().getY() - ChunkPos.REGION_SIZE * 2F, event.getColony().getCenter().getY() + ChunkPos.REGION_SIZE * 2F);
         });
     }
 
