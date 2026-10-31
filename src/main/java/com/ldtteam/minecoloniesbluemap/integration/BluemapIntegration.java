@@ -1,6 +1,7 @@
 package com.ldtteam.minecoloniesbluemap.integration;
 
 import com.ldtteam.minecoloniesbluemap.Constants;
+import com.ldtteam.minecoloniesbluemap.area.ColonyChunkClaimCalculator;
 import com.ldtteam.minecoloniesbluemap.integration.markers.ColonyMarker;
 import com.minecolonies.api.IMinecoloniesAPI;
 import com.minecolonies.api.colony.IColony;
@@ -20,9 +21,13 @@ import de.bluecolored.bluemap.api.markers.ExtrudeMarker;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.ChunkPos;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class BluemapIntegration
@@ -42,6 +47,21 @@ public class BluemapIntegration
     private static final String CITIZENS_MARKER_SET_NAME  = "MineColonies: Citizens";
 
     private static final int COLONY_MARKER_MAX_DISTANCE = 5000;
+
+    /**
+     * How often (in ticks) the claimed chunks of all colonies are checked for changes.
+     */
+    private static final int CLAIM_CHECK_INTERVAL_TICKS = 600;
+
+    /**
+     * The claimed chunks per colony id at the time its marker was last created or refreshed.
+     */
+    private final Map<Integer, Set<ChunkPos>> lastClaimedChunks = new ConcurrentHashMap<>();
+
+    /**
+     * Counter for the server ticks, used for the periodic claim check.
+     */
+    private int tickCounter = 0;
 
     /**
      * The BlueMap API instance.
@@ -92,16 +112,93 @@ public class BluemapIntegration
      */
     private void createColonyMarker(final IColony colony)
     {
+        final Set<ChunkPos> claimedChunks = calculateClaimedChunks(colony);
+        lastClaimedChunks.put(colony.getID(), claimedChunks);
         final ExtrudeMarker marker = ExtrudeMarker.builder()
             .label(colony.getName())
             .detail(ColonyMarker.createDetails(colony))
-            .shape(ColonyMarker.createShape(colony), colony.getCenter().getY() - ChunkPos.REGION_SIZE * 2F, colony.getCenter().getY() + ChunkPos.REGION_SIZE * 2F)
+            .shape(ColonyMarker.createShape(claimedChunks), getShapeMinY(colony), getShapeMaxY(colony))
             .lineColor(ColonyMarker.getLineColor(colony))
             .fillColor(ColonyMarker.getFillColor(colony))
             .maxDistance(COLONY_MARKER_MAX_DISTANCE)
             .build();
 
         executeForEachMap(colony, bMap -> bMap.getMarkerSets().get(COLONIES_MARKER_SET.toString()).put(String.valueOf(colony.getID()), marker));
+    }
+
+    private static float getShapeMinY(final IColony colony)
+    {
+        return colony.getCenter().getY() - ChunkPos.REGION_SIZE * 2F;
+    }
+
+    private static float getShapeMaxY(final IColony colony)
+    {
+        return colony.getCenter().getY() + ChunkPos.REGION_SIZE * 2F;
+    }
+
+    /**
+     * Internal common method for refreshing the area and the details of an existing colony marker, as the claimed chunks depend on the colony's buildings.
+     *
+     * @param colony the target colony.
+     */
+    private void refreshColonyArea(final IColony colony)
+    {
+        refreshColonyArea(colony, calculateClaimedChunks(colony));
+    }
+
+    /**
+     * Internal method for refreshing the area and the details of an existing colony marker, using already calculated claimed chunks.
+     *
+     * @param colony        the target colony.
+     * @param claimedChunks the chunks currently claimed by the colony.
+     */
+    private void refreshColonyArea(final IColony colony, final Set<ChunkPos> claimedChunks)
+    {
+        lastClaimedChunks.put(colony.getID(), claimedChunks);
+        executeForEachMap(colony, bMap -> {
+            final ExtrudeMarker marker = (ExtrudeMarker) bMap.getMarkerSets().get(COLONIES_MARKER_SET.toString()).get(String.valueOf(colony.getID()));
+            if (marker == null)
+            {
+                return;
+            }
+            marker.setShape(ColonyMarker.createShape(claimedChunks), getShapeMinY(colony), getShapeMaxY(colony));
+            marker.setDetail(ColonyMarker.createDetails(colony));
+        });
+    }
+
+    /**
+     * Calculates the chunks claimed by a colony.
+     *
+     * @param colony the target colony.
+     * @return an immutable set of the claimed chunks.
+     */
+    private static Set<ChunkPos> calculateClaimedChunks(final IColony colony)
+    {
+        return Set.copyOf(ColonyChunkClaimCalculator.getAllClaimedChunks(colony));
+    }
+
+    /**
+     * Event handler for the server tick. Periodically checks if the chunks claimed by a colony changed, as MineColonies does not fire an event for every claim change (for example
+     * admin commands or other mods changing a building level).
+     *
+     * @param event the event instance.
+     */
+    public void onServerTick(@NotNull final ServerTickEvent.Post event)
+    {
+        if (api == null || ++tickCounter % CLAIM_CHECK_INTERVAL_TICKS != 0)
+        {
+            return;
+        }
+
+        for (final IColony colony : IMinecoloniesAPI.getInstance().getColonyManager().getAllColonies())
+        {
+            final Set<ChunkPos> previous = lastClaimedChunks.get(colony.getID());
+            final Set<ChunkPos> current = calculateClaimedChunks(colony);
+            if (previous != null && !previous.equals(current))
+            {
+                refreshColonyArea(colony, current);
+            }
+        }
     }
 
     /**
@@ -135,6 +232,7 @@ public class BluemapIntegration
             bMap.getMarkerSets().remove(CITIZENS_MARKER_SET.toString());
         });
         this.api = null;
+        this.lastClaimedChunks.clear();
     }
 
     /**
@@ -154,6 +252,7 @@ public class BluemapIntegration
      */
     public void onColonyDeleted(@NotNull final ColonyDeletedModEvent event)
     {
+        lastClaimedChunks.remove(event.getColony().getID());
         executeForEachMap(event.getColony(), bMap -> bMap.getMarkerSets().get(COLONIES_MARKER_SET.toString()).remove(String.valueOf(event.getColony().getID())));
     }
 
@@ -192,10 +291,7 @@ public class BluemapIntegration
      */
     public void onBuildingAdded(@NotNull BuildingAddedModEvent event)
     {
-        executeForEachMap(event.getColony(), bMap -> {
-            final ExtrudeMarker marker = (ExtrudeMarker) bMap.getMarkerSets().get(COLONIES_MARKER_SET.toString()).get(String.valueOf(event.getColony().getID()));
-            marker.setDetail(ColonyMarker.createDetails(event.getColony()));
-        });
+        refreshColonyArea(event.getColony());
     }
 
     /**
@@ -205,10 +301,7 @@ public class BluemapIntegration
      */
     public void onBuildingConstruction(@NotNull final BuildingConstructionModEvent event)
     {
-        executeForEachMap(event.getColony(), bMap -> {
-            final ExtrudeMarker marker = (ExtrudeMarker) bMap.getMarkerSets().get(COLONIES_MARKER_SET.toString()).get(String.valueOf(event.getColony().getID()));
-            marker.setDetail(ColonyMarker.createDetails(event.getColony()));
-        });
+        refreshColonyArea(event.getColony());
     }
 
     /**
@@ -218,10 +311,7 @@ public class BluemapIntegration
      */
     public void onBuildingRemoved(@NotNull BuildingRemovedModEvent event)
     {
-        executeForEachMap(event.getColony(), bMap -> {
-            final ExtrudeMarker marker = (ExtrudeMarker) bMap.getMarkerSets().get(COLONIES_MARKER_SET.toString()).get(String.valueOf(event.getColony().getID()));
-            marker.setDetail(ColonyMarker.createDetails(event.getColony()));
-        });
+        refreshColonyArea(event.getColony());
     }
 
     /**

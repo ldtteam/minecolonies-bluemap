@@ -16,6 +16,7 @@ import de.bluecolored.bluemap.api.BlueMapAPI;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.common.NeoForge;
 import org.jetbrains.annotations.NotNull;
 
 @Mod(Constants.MOD_ID)
@@ -31,6 +32,7 @@ public class MinecoloniesBluemap
         BlueMapAPI.onDisable(this.integration::onDisable);
 
         modBus.addListener(this::preInit);
+        NeoForge.EVENT_BUS.addListener(this.integration::onServerTick);
     }
 
     /**

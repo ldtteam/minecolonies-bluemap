@@ -135,7 +135,17 @@ public class ColonyMarker
      */
     public static Shape createShape(final IColony colony)
     {
-        final Collection<ChunkPos> claimedChunks = ColonyChunkClaimCalculator.getAllClaimedChunks(colony);
+        return createShape(ColonyChunkClaimCalculator.getAllClaimedChunks(colony));
+    }
+
+    /**
+     * Creates the shape for the colony marker from already calculated claimed chunks.
+     *
+     * @param claimedChunks the chunks claimed by the colony.
+     * @return the shape instance.
+     */
+    public static Shape createShape(final Collection<ChunkPos> claimedChunks)
+    {
         final ColonyArea area = AreaGenerator.generateAreaFromChunks(claimedChunks);
         return Shape.builder().addPoints(area.getPoints()).build();
     }
